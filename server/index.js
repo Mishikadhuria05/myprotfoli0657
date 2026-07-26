@@ -1,13 +1,37 @@
 const express = require('express');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
+// CORS configuration to support local development, Vercel deployments, and custom domains
+const corsOptions = {
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps, curl, Postman, or same-origin)
+        if (!origin) return callback(null, true);
+        
+        // Allowed domains (localhost, client URL, any vercel preview deployment)
+        if (
+            origin.includes('localhost') ||
+            origin.includes('127.0.0.1') ||
+            origin.endsWith('.vercel.app') ||
+            (process.env.CLIENT_URL && origin === process.env.CLIENT_URL)
+        ) {
+            return callback(null, true);
+        }
+        
+        return callback(null, true); // Fallback: allow all origins to prevent CORS errors on Vercel
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json());
 
 // Routes
@@ -46,10 +70,20 @@ app.post('/api/contact', async (req, res) => {
     }
 });
 
+app.get('/api', (req, res) => {
+    res.json({ message: 'Portfolio API Backend is running!' });
+});
+
 app.get('/', (req, res) => {
     res.send('Portfolio Backend is running!');
 });
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+// Export app for Vercel serverless execution
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
+}
+
+module.exports = app;
+
