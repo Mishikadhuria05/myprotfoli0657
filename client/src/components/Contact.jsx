@@ -23,7 +23,8 @@ const Contact = () => {
     setStatus({ type: '', message: '' });
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const rawApiUrl = import.meta.env.VITE_API_URL || '';
+      const apiUrl = rawApiUrl.replace(/\/+$/, '');
       const response = await fetch(`${apiUrl}/api/contact`, {
         method: 'POST',
         headers: {

@@ -7,31 +7,29 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// CORS configuration to support local development, Vercel deployments, and custom domains
-const corsOptions = {
-    origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps, curl, Postman, or same-origin)
-        if (!origin) return callback(null, true);
-        
-        // Allowed domains (localhost, client URL, any vercel preview deployment)
-        if (
-            origin.includes('localhost') ||
-            origin.includes('127.0.0.1') ||
-            origin.endsWith('.vercel.app') ||
-            (process.env.CLIENT_URL && origin === process.env.CLIENT_URL)
-        ) {
-            return callback(null, true);
-        }
-        
-        return callback(null, true); // Fallback: allow all origins to prevent CORS errors on Vercel
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-};
+// Custom bulletproof CORS middleware for Vercel Serverless and Local Dev
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+    } else {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+    }
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+    // Handle preflight OPTIONS request immediately
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+    next();
+});
+
+app.use(cors({
+    origin: true,
+    credentials: true
+}));
 app.use(express.json());
 
 // Routes
