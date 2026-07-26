@@ -8,10 +8,11 @@ build/
 # Vite cache
 .vite/
 
-# Environment variables
+# Environment variables (NEVER push these!)
 .env
 .env.local
 .env.*.local
+server/.env
 
 # OS files
 .DS_Store
@@ -20,3 +21,7 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Logs
+*.log
+npm-debug.log*
